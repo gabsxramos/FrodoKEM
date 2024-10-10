@@ -1,0 +1,3 @@
+[submodule "external/KEM-NIZKPoP"]
+	path = external/KEM-NIZKPoP
+	url = https://github.com/Chair-for-Security-Engineering/KEM-NIZKPoP.git
