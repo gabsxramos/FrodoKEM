@@ -1,8 +1,10 @@
 // main.go
+
 package main
 
 /*
-#cgo LDFLAGS: -L/usr/lib -lssl -lcrypto
+#cgo CFLAGS: -I/home/<SEULOCAL>/zkpop-go/external/KEM-NIZKPoP/frodo-zkpop/frodo640/ -I/usr/include/
+#cgo LDFLAGS: -L/home/<SEULOCAL/projetos/Grupo_PQC/edital12PIBIC/zkpop-go/external/KEM-NIZKPoP/frodo-zkpop/frodo640/ -L/usr/lib/ -lfrodo -lssl -lcrypto 
 */
 import "C"
 
@@ -16,6 +18,7 @@ func main() {
 	// Test KeyPair generation
 	fmt.Println("Generating keypair with zkpop...")
 
+//	pk, sk, zkpopProof, err := zkpop.KeyPair()
 	pk, sk, zkpopProof, err := zkpop.KeyPair()
 	if err != nil {
 		log.Fatalf("Error generating keypair: %v", err)
@@ -26,13 +29,13 @@ func main() {
 	fmt.Printf("Zero-Knowledge Proof: %x\n", zkpopProof)
 
 	// Test zkpop verification
-	fmt.Println("Verifying zkpop...")
+	//fmt.Println("Verifying zkpop...")
 
-	isValid := zkpop.VerifyZKPop(pk, zkpopProof) // Call zkpop.VerifyZKPop correctly
+	/*isValid := zkpop.VerifyZKPop(pk, zkpopProof) // Call zkpop.VerifyZKPop correctly
 	if isValid {
 		fmt.Println("zkpop verification successful!")
 	} else {
 		fmt.Println("zkpop verification failed.")
-	}
+	}*/
 }
 
