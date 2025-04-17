@@ -1,3 +1,7 @@
+//go:build kyber
+// +build kyber
+
+
 // Kyber original bindings, just for comparison purposes
 package zkpop
 
