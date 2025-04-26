@@ -132,7 +132,7 @@ func testFrodoKEMNIZKPoP(N int) {
 }
 
 func main() {
-	N := 10 //modifique para trocar o número de iterações 
+	N := 10
 	fmt.Printf("Testing %d iterations ...\n", N)
 	testFrodoKEM(N)
 	testFrodoKEMNIZKPoP(N)

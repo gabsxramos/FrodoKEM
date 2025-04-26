@@ -3,7 +3,7 @@ package main
 
 /*
 #cgo CFLAGS: -I/mnt/c/Users/Gabriela\ Ramos/OneDrive/Desktop/Codes/zkpop-go/external/KEM-NIZKPoP/frodo-zkpop/src
-#cgo LDFLAGS: -L/mnt/c/Users/Gabriela\ Ramos/OneDrive/Desktop/Codes/zkpop-go/external/KEM-NIZKPoP/frodo-zkpop/zkpop/frodo976 -lfrodo976
+#cgo LDFLAGS: -L/mnt/c/Users/Gabriela\ Ramos/OneDrive/Desktop/Codes/zkpop-go/external/KEM-NIZKPoP/frodo-zkpop/zkpop/frodo1344 -lfrodo1344
 */
 import "C"
 
@@ -50,36 +50,36 @@ func testFrodoKEM(N int) {
 	encapsStats := &timingStats{}
 	decapsStats := &timingStats{}
 
-	pk, sk, err := zkpop.KeyPairFrodo976()
+	pk, sk, err := zkpop.KeyPairFrodo1344()
 	if err != nil {
 		log.Fatalf("Error generating keypair: %v", err)
 	}
 
 	for i := 0; i < N; i++ {
 		start := time.Now()
-		pk, sk, err = zkpop.KeyPairFrodo976()
+		pk, sk, err = zkpop.KeyPairFrodo1344()
 		keygenStats.Add(time.Since(start))
 	}
 
-	ct, ss, err := zkpop.EncapsFrodo976(pk)
+	ct, ss, err := zkpop.EncapsFrodo1344(pk)
 	if err != nil {
 		log.Fatalf("Failed FrodoKEM encapsulation: %v", err)
 	}
 
 	for i := 0; i < N; i++ {
 		start := time.Now()
-		ct, ss, err = zkpop.EncapsFrodo976(pk)
+		ct, ss, err = zkpop.EncapsFrodo1344(pk)
 		encapsStats.Add(time.Since(start))
 	}
 
-	css, err := zkpop.DecapsFrodo976(ct, sk)
+	css, err := zkpop.DecapsFrodo1344(ct, sk)
 	if err != nil || !bytes.Equal(ss, css) {
 		log.Fatalf("Failed FrodoKEM decapsulation.")
 	}
 
 	for i := 0; i < N; i++ {
 		start := time.Now()
-		css, err = zkpop.DecapsFrodo976(ct, sk)
+		css, err = zkpop.DecapsFrodo1344(ct, sk)
 		decapsStats.Add(time.Since(start))
 	}
 
@@ -98,28 +98,28 @@ func testFrodoKEMNIZKPoP(N int) {
 	keygenStats := &timingStats{}
 	verifyStats := &timingStats{}
 
-	pk, _, zkpopProof, err := zkpop.KeyPairFrodo976NIZKPoP()
+	pk, _, zkpopProof, err := zkpop.KeyPairFrodo1344NIZKPoP()
 	if err != nil {
 		log.Fatalf("Error generating keypair: %v", err)
 	}
 
 	for i := 0; i < N; i++ {
 		start := time.Now()
-		pk, _, zkpopProof, err = zkpop.KeyPairFrodo976NIZKPoP()
+		pk, _, zkpopProof, err = zkpop.KeyPairFrodo1344NIZKPoP()
 		keygenStats.Add(time.Since(start))
 		if err != nil {
 			log.Fatalf("Error generating keypair: %v", err)
 		}
 	}
 
-	valid := zkpop.VerifyFrodo976ZKPop(pk, zkpopProof)
+	valid := zkpop.VerifyFrodo1344ZKPop(pk, zkpopProof)
 	if !valid {
 		log.Fatalf("Error verifying ZKPoP.")
 	}
 
 	for i := 0; i < N; i++ {
 		start := time.Now()
-		valid = zkpop.VerifyFrodo976ZKPop(pk, zkpopProof)
+		valid = zkpop.VerifyFrodo1344ZKPop(pk, zkpopProof)
 		verifyStats.Add(time.Since(start))
 	}
 
@@ -132,7 +132,7 @@ func testFrodoKEMNIZKPoP(N int) {
 }
 
 func main() {
-	N := 10 //modifique para trocar o número de iterações 
+	N := 10
 	fmt.Printf("Testing %d iterations ...\n", N)
 	testFrodoKEM(N)
 	testFrodoKEMNIZKPoP(N)

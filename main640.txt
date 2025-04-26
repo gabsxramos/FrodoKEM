@@ -1,9 +1,10 @@
+
 // mainANTIGO.go
-//package main
+package main
 
 /*
 #cgo CFLAGS: -I/mnt/c/Users/Gabriela\ Ramos/OneDrive/Desktop/Codes/zkpop-go/external/KEM-NIZKPoP/frodo-zkpop/src
-#cgo LDFLAGS: -L/mnt/c/Users/Gabriela\ Ramos/OneDrive/Desktop/Codes/zkpop-go/external/KEM-NIZKPoP/frodo-zkpop/frodo640 -lfrodo640
+#cgo LDFLAGS: -L/mnt/c/Users/Gabriela\ Ramos/OneDrive/Desktop/Codes/zkpop-go/external/KEM-NIZKPoP/frodo-zkpop/zkpop/frodo640 -lfrodo640
 */
 import "C"
 
@@ -14,9 +15,8 @@ import (
 	"math"
 	"time"
 
-	//"zkpop-go/zkpop"
+	"zkpop-go/zkpop"
 )
-
 type timingStats struct {
 	Durations []time.Duration
 }
@@ -132,9 +132,11 @@ func testFrodoKEMNIZKPoP(N int) {
 }
 
 func main() {
-	N := 100
-	fmt.Printf("Testing %d iterations for each algorithm...\n", N)
+	N := 10
+	fmt.Printf("Testing %d iterations ...\n", N)
 	testFrodoKEM(N)
 	testFrodoKEMNIZKPoP(N)
 	fmt.Println("End of testing.")
 }
+
+
