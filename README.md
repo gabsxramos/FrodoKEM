@@ -5,11 +5,11 @@
 project. It provides functions to generate keypairs, create Zero-Knowledge
 Proofs of Possession (ZKPoP), and verify proofs.
 
-## Créditos
+## Credits
 
-Este projeto foi originalmente baseado no [zkpop-go](https://github.com/gabrielzschmitz/zkpop-go) desenvolvido por [Gabriel Zschmitz](https://github.com/gabrielzschmitz).
+This project was originally based on [zkpop-go](https://github.com/gabrielzschmitz/zkpop-go) developed by [Gabriel Zschmitz](https://github.com/gabrielzschmitz).
 
-Realizei diversas modificações e adaptações para focar na implementação do FrodoKEM nas variantes 640, 976 e 1344.
+Several modifications and adaptations were made to focus on implementing FrodoKEM in the 640, 976 and 1344 variants.
 
 ## Getting Started
 
