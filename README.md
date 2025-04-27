@@ -67,6 +67,7 @@ go build -o zkpop-exec`
 ```bash
 ./zkpop
 ```
+Each .txt has a version of frodoKEM in relation to its respective code. For example, main640.txt contains the code main.go with the version of frodo 640 and so on. This is repeated with frodoKEM.go and zkpop.go as well. So before running the code, choose which version of FrodoKEM you want and copy and paste the .txt of it into your respective .go file.
 
 ## License
 
