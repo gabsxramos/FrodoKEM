@@ -5,6 +5,12 @@
 project. It provides functions to generate keypairs, create Zero-Knowledge
 Proofs of Possession (ZKPoP), and verify proofs.
 
+## Créditos
+
+Este projeto foi originalmente baseado no [zkpop-go](https://github.com/gabrielzschmitz/zkpop-go) desenvolvido por [Gabriel Zschmitz](https://github.com/gabrielzschmitz).
+
+Realizei diversas modificações e adaptações para focar na implementação do FrodoKEM nas variantes 640, 976 e 1344.
+
 ## Getting Started
 
 ### Supported algorithms
@@ -44,15 +50,6 @@ To build the library, navigate to `external/KEM-NIZKPoP/frodo-zkpop`:
 `make clean && make OPT_LEVEL=FAST USE_OPENSSL=FALSE GENERATION_A=SHAKE128 ZKPOP_N=65536 ZKPOP_TAU=8 && frodo640/test_KEM`
 
 If you are going to use openssl, just do a `make` instead.
-
-It's important to rename the files with the default name lib<name>.a.
-If you have multiple versions named libfrodo.a in different folders, 
-the Go/C linker in main.go may get confused or pick the wrong one — especially if a -L ends up pointing to the wrong directory or multiple ones are used.
-`cd external/KEM-NIZKPoP/frodo-zkpop`
-`mv frodo640/libfrodo.a frodo640/libfrodo640.a`
-`mv frodo976/libfrodo.a frodo976/libfrodo976.a`
-`mv frodo1344/libfrodo.a frodo1344/libfrodo1344.a`
-
 
 ### Build the Go Project
 

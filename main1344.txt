@@ -1,4 +1,7 @@
 // main.go
+// Based on zkpop-go by Gabriel Zschmitz: https://github.com/gabrielzschmitz/zkpop-go
+// Modified by Gabriela Ramos for FrodoKEM experiments.
+
 package main
 
 /*

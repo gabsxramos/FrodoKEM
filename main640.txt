@@ -1,5 +1,5 @@
 
-// mainANTIGO.go
+// main.go
 package main
 
 /*
