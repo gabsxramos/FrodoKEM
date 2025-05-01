@@ -32,7 +32,7 @@ Ensure you have the following installed on your system:
 First, clone the `zkpop-go` repository:
 
 ```bash
-git clone --recurse-submodules https://github.com/gabrielzschmitz/zkpop-go.git
+git clone --recurse-submodules https://github.com/gabsxramos/FrodoKEM
 cd zkpop-go
 ```
 
@@ -55,7 +55,7 @@ If you are going to use openssl, just do a `make` instead.
 
 Before building the project, you need to change `main.go` because (sadly!) `CFLAGS` and `LDFLAGS` contains absolute paths. Change it to your path.
 
-Now you can build the project (navigate to `zkpop-go/` directory):
+Now you can build the project (navigate to `zkpop` directory):
 
 ```bash
 go clean
