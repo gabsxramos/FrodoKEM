@@ -38,17 +38,30 @@ func KeyPairFrodo1344NIZKPoP() ([]byte, []byte, []byte, error) {
 	return pk, sk, zkpopGo, nil
 }
 
-func VerifyFrodo1344ZKPop(pk []byte, zkpop []byte) bool {
-	// Verifica se pk e zkpop são válidos
-	if pk == nil || zkpop == nil || len(pk) == 0 || len(zkpop) == 0 {
-		fmt.Println("Invalid input to VerifyFrodo1344ZKPop: nil or empty buffer")
-		return false
+func KeyPairFrodo1344NIZKPoP() ([]byte, []byte, []byte, error) {
+	pk := make([]byte, C.CRYPTO_PUBLICKEYBYTES)
+	sk := make([]byte, C.CRYPTO_SECRETKEYBYTES)
+
+	// Estimativa de tamanho — ajuste conforme necessário se você souber o real
+	const estimatedZKPoPSize = 271764
+
+	zkpopGo := make([]byte, estimatedZKPoPSize)
+	var zkpopSize C.ulong
+
+	ret := C.crypto_kem_keypair_nizkpop_Frodo1344(
+		(*C.uint8_t)(unsafe.Pointer(&pk[0])),
+		(*C.uint8_t)(unsafe.Pointer(&sk[0])),
+		(**C.uchar)(unsafe.Pointer(&zkpopGo[0])),
+		&zkpopSize,
+	)
+
+	if ret != 0 {
+		return nil, nil, nil, fmt.Errorf("failed to generate keypair")
 	}
 
-	ret := C.crypto_nizkpop_verify_Frodo1344(
-		(*C.uchar)(unsafe.Pointer(&pk[0])),
-		(*C.uchar)(unsafe.Pointer(&zkpop[0])),
-		C.ulong(len(zkpop)))
+	// Importante: cortamos o slice apenas até o tamanho real retornado
+	zkpopGo = zkpopGo[:zkpopSize]
 
-	return ret == 0
+	return pk, sk, zkpopGo, nil
 }
+
