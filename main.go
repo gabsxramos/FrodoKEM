@@ -1,9 +1,10 @@
 package main
 
 /*
-#cgo CFLAGS: -I/mnt/c/Users/Gabriela\ Ramos/OneDrive/Desktop/Codes/zkpopGabriel/external/KEM-NIZKPoP/frodo-zkpop/src
-#cgo LDFLAGS: /mnt/c/Users/Gabriela\ Ramos/OneDrive/Desktop/Codes/zkpopGabriel/external/KEM-NIZKPoP/frodo-zkpop/frodo640/libfrodo.a
-#include "api_frodo640.h"
+
+#cgo CFLAGS: -I../external/KEM-NIZKPoP/frodo-zkpop/src
+#cgo LDFLAGS: -L../external/KEM-NIZKPoP/frodo-zkpop/frodo640 -lfrodo
+
 */
 import "C"
 
