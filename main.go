@@ -1,167 +1,174 @@
-// main.go
 package main
 
-
 /*
-#cgo CFLAGS: -I/home/<SEULOCAL>/zkpop-go/external/KEM-NIZKPoP/frodo-zkpop/frodo640/ -I/home/<SEULOCAL>/zkpop-go/external/KEM-NIZKPoP/kyber-zkpop/avx2/ -I/usr/include/ 
-#cgo LDFLAGS: -L/home/<SEULOCAL>/zkpop-go/external/KEM-NIZKPoP/frodo-zkpop/frodo640/ -L/home/<SEULOCAL>/zkpop-go/external/KEM-NIZKPoP/kyber-zkpop/avx2/ -L/usr/lib/ -lfrodo -lpqcrystals_kyber512_avx2 -lpqcrystals_aes256ctr_avx2 -lpqcrystals_fips202_ref -lpqcrystals_fips202x4_avx2 -lssl -lcrypto 
+#cgo CFLAGS: -I/mnt/c/Users/Gabriela\ Ramos/OneDrive/Desktop/Codes/zkpopGabriel/external/KEM-NIZKPoP/frodo-zkpop/src
+#cgo LDFLAGS: /mnt/c/Users/Gabriela\ Ramos/OneDrive/Desktop/Codes/zkpopGabriel/external/KEM-NIZKPoP/frodo-zkpop/frodo640/libfrodo.a
+#include "api_frodo640.h"
 */
 import "C"
 
 import (
+	"bytes"
 	"fmt"
 	"log"
-	"bytes"
-	"zkpop-go/zkpop" 
+	"time"
+
+	"zkpop-go/zkpop"
 )
 
-//test FrodoKEM in N+1 iterations
-func testFrodoKEM(N int){
-        fmt.Println("Testing FrodoKEM...")
+import "math"
 
-        //warmup
-        pk, sk, err := zkpop.KeyPairFrodo640()
-        if err != nil {
-                log.Fatalf("Error generating keypair: %v", err)
-        }
 
-        //test N keygens
-        for i := 0; i < N; i++  {
-                pk, sk, err = zkpop.KeyPairFrodo640()
-        }
-	
-	//warmup Encaps
+func stddev(times []float64, mean float64) float64 {
+	var sum float64
+	for _, t := range times {
+		diff := t - mean
+		sum += diff * diff
+	}
+	return math.Sqrt(sum / float64(len(times)))
+}
+
+func testFrodoKEM(N int) {
+	fmt.Println("Testing FrodoKEM...")
+
+	var kpTimes, encTimes, decTimes []float64
+
+	// warmup
+	pk, sk, err := zkpop.KeyPairFrodo640()
+	if err != nil {
+		log.Fatalf("Error generating keypair: %v", err)
+	}
+
+	// ===== KeyPair Timing =====
+	startKeypair := time.Now()
+	for i := 0; i < N; i++ {
+		start := time.Now()
+		pk, sk, err = zkpop.KeyPairFrodo640()
+		if err != nil {
+			log.Fatalf("Keypair generation failed on iteration %d: %v", i, err)
+		}
+		kpTimes = append(kpTimes, time.Since(start).Seconds())
+	}
+	totalKeypair := time.Since(startKeypair).Seconds()
+
+	// warmup
 	ct, ss, err := zkpop.EncapsFrodo640(pk)
 	if err != nil {
-                log.Fatalf("Failed FrodoKEM encapsulation: %v", err)
-        }
+		log.Fatalf("Failed FrodoKEM encapsulation: %v", err)
+	}
 
-	//test N Encaps
-	for i := 0; i < N; i++  {
-                ct, ss, err = zkpop.EncapsFrodo640(pk)
-        }
+	// ===== Encaps Timing =====
+	startEncaps := time.Now()
+	for i := 0; i < N; i++ {
+		start := time.Now()
+		ct, ss, err = zkpop.EncapsFrodo640(pk)
+		if err != nil {
+			log.Fatalf("Encapsulation failed on iteration %d: %v", i, err)
+		}
+		encTimes = append(encTimes, time.Since(start).Seconds())
+	}
+	totalEncaps := time.Since(startEncaps).Seconds()
 
-	//warmup Decaps
+	// warmup
 	css, err := zkpop.DecapsFrodo640(ct, sk)
-	if err != nil || !bytes.Equal(ss,css) {
-                log.Fatalf("Failed FrodoKEM decapsulation.")
-        }
-
-	//test N Decaps
-	for i := 0; i < N; i++  {
-                css, err = zkpop.DecapsFrodo640(ct, sk)
-        }
-
-}
-
-
-//test FrodoKEM-NIZKPoP in N+1 iterations
-func testFrodoKEMNIZKPoP(N int){
-  	fmt.Println("Testing FrodoKEM-NIZKPoP...")
-
-	//warmup
-        pk, _, zkpopProof, err := zkpop.KeyPairFrodo640NIZKPoP()
-        if err != nil {
-                log.Fatalf("Error generating keypair: %v", err)
-        }
-
-	//test N keygens
-	for i := 0; i < N; i++  {
-        	pk, _, zkpopProof, err = zkpop.KeyPairFrodo640NIZKPoP()
+	if err != nil || !bytes.Equal(ss, css) {
+		log.Fatalf("Failed FrodoKEM decapsulation.")
 	}
 
-        //fmt.Printf("Public Key: %x\n", pk)
-        //fmt.Printf("Secret Key: %x\n", sk)
-        //fmt.Printf("Zero-Knowledge Proof: %x\n", zkpopProof)
+	// ===== Decaps Timing =====
+	startDecaps := time.Now()
+	for i := 0; i < N; i++ {
+		start := time.Now()
+		css, err = zkpop.DecapsFrodo640(ct, sk)
+		if err != nil || !bytes.Equal(ss, css) {
+			log.Fatalf("Decapsulation failed on iteration %d", i)
+		}
+		decTimes = append(decTimes, time.Since(start).Seconds())
+	}
+	totalDecaps := time.Since(startDecaps).Seconds()
 
-	//warmup
-	valid := zkpop.VerifyFrodo640ZKPop(pk, zkpopProof)
-        if !valid {
-                log.Fatalf("Error verifying ZKPoP: %v", err)
+	// ===== Compute Averages & Stddevs =====
+	avg := func(times []float64) float64 {
+		var sum float64
+		for _, t := range times {
+			sum += t
+		}
+		return sum / float64(len(times))
 	}
 
-	//test N verifications
-	for i := 0; i < N; i++  {
-		valid = zkpop.VerifyFrodo640ZKPop(pk, zkpopProof) 
+	kpAvg := avg(kpTimes)
+	encAvg := avg(encTimes)
+	decAvg := avg(decTimes)
+
+	fmt.Printf("KeyPair:  Total = %.4f s, Avg = %.6f s/op, StdDev = %.6f\n", totalKeypair, kpAvg, stddev(kpTimes, kpAvg))
+	fmt.Printf("Encaps:   Total = %.4f s, Avg = %.6f s/op, StdDev = %.6f\n", totalEncaps, encAvg, stddev(encTimes, encAvg))
+	fmt.Printf("Decaps:   Total = %.4f s, Avg = %.6f s/op, StdDev = %.6f\n", totalDecaps, decAvg, stddev(decTimes, decAvg))
+}
+
+// test FrodoKEM-NIZKPoP in N iterations and measure time
+func testFrodoKEMNIZKPoP(N int) {
+	fmt.Println("Testing FrodoKEM-NIZKPoP...")
+
+	var keygenTimes, verifyTimes []float64
+
+	// warmup
+	pk, _, zkpopProof, err := zkpop.KeyPairFrodo640NIZKPoP()
+	if err != nil {
+		log.Fatalf("Error generating keypair: %v", err)
 	}
+	_ = zkpop.VerifyFrodo640ZKPop(pk, zkpopProof)
+
+	// ===== KeyGen Timing =====
+	startKeygen := time.Now()
+	for i := 0; i < N; i++ {
+		start := time.Now()
+		pk, _, zkpopProof, err = zkpop.KeyPairFrodo640NIZKPoP()
+		if err != nil {
+			log.Fatalf("Keypair NIZKPoP failed on iteration %d: %v", i, err)
+		}
+		keygenTimes = append(keygenTimes, time.Since(start).Seconds())
+	}
+	totalKeygen := time.Since(startKeygen).Seconds()
+
+	// ===== Verify Timing =====
+	startVerify := time.Now()
+	for i := 0; i < N; i++ {
+		start := time.Now()
+		valid := zkpop.VerifyFrodo640ZKPop(pk, zkpopProof)
+		if !valid {
+			log.Fatalf("Verification failed on iteration %d", i)
+		}
+		verifyTimes = append(verifyTimes, time.Since(start).Seconds())
+	}
+	totalVerify := time.Since(startVerify).Seconds()
+
+	// ===== Aggregated Totals =====
+	total := totalKeygen + totalVerify
+
+	// ===== Averages and Stddevs =====
+	avg := func(times []float64) float64 {
+		var sum float64
+		for _, t := range times {
+			sum += t
+		}
+		return sum / float64(len(times))
+	}
+
+	keygenAvg := avg(keygenTimes)
+	verifyAvg := avg(verifyTimes)
+
+	fmt.Printf("KeyGen:   Total = %.4f s, Avg = %.6f s/op, StdDev = %.6f\n", totalKeygen, keygenAvg, stddev(keygenTimes, keygenAvg))
+	fmt.Printf("Verify:   Total = %.4f s, Avg = %.6f s/op, StdDev = %.6f\n", totalVerify, verifyAvg, stddev(verifyTimes, verifyAvg))
+	fmt.Printf("Combined: Total = %.4f s, Avg = %.6f s/step (KeyGen+Verify)\n", total, (totalKeygen+totalVerify)/float64(N*2))
 }
-
-//test Kyber512-NIZKPoP in N+1 iterations
-func testKyberNIZKPoP(N int){
-	fmt.Println("Testing Kyber512-NIZKPoP...")
-	//warmup
-        pk, _, zkpopProof, err := zkpop.KeyPairKyber512NIZKPoP()
-        if err != nil {
-                log.Fatalf("Error generating keypair: %v", err)
-        }
-
-	//test N keygens
-        for i := 0; i < N; i++  {
-                pk, _, zkpopProof, err = zkpop.KeyPairKyber512NIZKPoP()
-        }
-        //warmup
-        valid := zkpop.VerifyKyber512ZKPop(pk, zkpopProof)
-        if !valid {
-                log.Fatalf("Error verifying ZKPoP: %v", err)
-        }
-
-	//test N verifications
-        for i := 0; i < N; i++  {
-                valid = zkpop.VerifyKyber512ZKPop(pk, zkpopProof) 
-        }
-
-
-}
-
-func testKyber(N int){
-	fmt.Println("Testing Kyber...")
-	 //warmup
-        pk, sk, err := zkpop.KeyPairKyber512()
-        if err != nil {
-                log.Fatalf("Error generating keypair: %v", err)
-        }
-
-	//test N keygens
-        for i := 0; i < N; i++  {
-                pk, sk, err = zkpop.KeyPairKyber512()
-        }
-
-        //warmup Encaps
-        ct, ss, err := zkpop.EncapsKyber512(pk)
-        if err != nil {
-                log.Fatalf("Failed Kyber512 encapsulation: %v", err)
-        }
-
-        //test N Encaps
-        for i := 0; i < N; i++  {
-                ct, ss, err = zkpop.EncapsKyber512(pk)
-        }
-
-	//warmup Decaps
-        css, err := zkpop.DecapsKyber512(ct, sk)
-        if err != nil || !bytes.Equal(ss,css) {
-                log.Fatalf("Failed Kyber512 decapsulation.")
-        }
-
-        //test N Decaps
-        for i := 0; i < N; i++  {
-                css, err = zkpop.DecapsKyber512(ct, sk)
-        }
-}
-
 
 func main() {
-	N := 10
-	fmt.Printf("Testing %d iterations for each algorithm...\n", N)
+	N := 2
+	fmt.Printf("Testing %d iterations for frodo algorithm...\n\n", N)
 
-	//Frodo-KEM
 	testFrodoKEM(N)
+	fmt.Println()
 	testFrodoKEMNIZKPoP(N)
 
-	//Kyber
-	testKyber(N)
-	testKyberNIZKPoP(N)
-
-	fmt.Println("End of testing.")
+	fmt.Println("\nEnd of testing.")
 }
-

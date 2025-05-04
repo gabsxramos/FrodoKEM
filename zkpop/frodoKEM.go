@@ -46,7 +46,6 @@ func EncapsFrodo640(pk []byte)([]byte, []byte, error){
         return ct, ss, nil
 }
 
-
 //Given a ciphertext ct and a private key sk
 //returns a candidate shared secret css
 func DecapsFrodo640(ct []byte, sk []byte)([]byte, error){
