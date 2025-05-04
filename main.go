@@ -108,37 +108,36 @@ func testFrodoKEMNIZKPoP(N int) {
 
 	var keygenTimes, verifyTimes []float64
 
-	// warmup
-	pk, _, zkpopProof, err := zkpop.KeyPairFrodo1344NIZKPoP()
-	if err != nil {
-		log.Fatalf("Error generating keypair: %v", err)
-	}
-	_ = zkpop.VerifyFrodo1344ZKPop(pk, zkpopProof)
-
-	// ===== KeyGen Timing =====
-	startKeygen := time.Now()
 	for i := 0; i < N; i++ {
+		// === KeyGen ===
 		start := time.Now()
-		pk, _, zkpopProof, err = zkpop.KeyPairFrodo1344NIZKPoP()
+		pk, _, zkpopProof, err := zkpop.KeyPairFrodo1344NIZKPoP()
 		if err != nil {
 			log.Fatalf("Keypair NIZKPoP failed on iteration %d: %v", i, err)
 		}
 		keygenTimes = append(keygenTimes, time.Since(start).Seconds())
-	}
-	totalKeygen := time.Since(startKeygen).Seconds()
 
-	// ===== Verify Timing =====
-	startVerify := time.Now()
-	for i := 0; i < N; i++ {
-		start := time.Now()
+		// === Debug logs ===
+		fmt.Printf("[Iter %d] zkpop length: %d bytes\n", i, len(zkpopProof))
+		fmt.Printf("[Iter %d] pk length: %d bytes\n", i, len(pk))
+
+		// === Sanity check ===
+		if pk == nil || len(pk) == 0 || zkpopProof == nil || len(zkpopProof) == 0 {
+			log.Fatalf("Invalid input to verification on iteration %d", i)
+		}
+
+		// === Verify ===
+		start = time.Now()
 		valid := zkpop.VerifyFrodo1344ZKPop(pk, zkpopProof)
 		if !valid {
 			log.Fatalf("Verification failed on iteration %d", i)
 		}
 		verifyTimes = append(verifyTimes, time.Since(start).Seconds())
 	}
-	totalVerify := time.Since(startVerify).Seconds()
 
+	// ===== Averages and totals =====
+	totalKeygen := sum(keygenTimes)
+	totalVerify := sum(verifyTimes)
 	total := totalKeygen + totalVerify
 
 	avg := func(times []float64) float64 {
@@ -154,8 +153,17 @@ func testFrodoKEMNIZKPoP(N int) {
 
 	fmt.Printf("KeyGen:   Total = %.4f s, Avg = %.6f s/op, StdDev = %.6f\n", totalKeygen, keygenAvg, stddev(keygenTimes, keygenAvg))
 	fmt.Printf("Verify:   Total = %.4f s, Avg = %.6f s/op, StdDev = %.6f\n", totalVerify, verifyAvg, stddev(verifyTimes, verifyAvg))
-	fmt.Printf("Combined: Total = %.4f s, Avg = %.6f s/step (KeyGen+Verify)\n", total, (totalKeygen+totalVerify)/float64(N*2))
+	fmt.Printf("Combined: Total = %.4f s, Avg = %.6f s/step (KeyGen+Verify)\n", total, (total)/float64(N*2))
 }
+
+func sum(values []float64) float64 {
+	var total float64
+	for _, v := range values {
+		total += v
+	}
+	return total
+}
+
 
 func main() {
 	N := 100
