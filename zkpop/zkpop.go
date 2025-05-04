@@ -39,8 +39,16 @@ func KeyPairFrodo1344NIZKPoP() ([]byte, []byte, []byte, error) {
 }
 
 func VerifyFrodo1344ZKPop(pk []byte, zkpop []byte) bool {
-	ret := C.crypto_nizkpop_verify_Frodo1344((*C.uchar)(unsafe.Pointer(&pk[0])),
+	// Verifica se pk e zkpop são válidos
+	if pk == nil || zkpop == nil || len(pk) == 0 || len(zkpop) == 0 {
+		fmt.Println("Invalid input to VerifyFrodo1344ZKPop: nil or empty buffer")
+		return false
+	}
+
+	ret := C.crypto_nizkpop_verify_Frodo1344(
+		(*C.uchar)(unsafe.Pointer(&pk[0])),
 		(*C.uchar)(unsafe.Pointer(&zkpop[0])),
 		C.ulong(len(zkpop)))
+
 	return ret == 0
 }
