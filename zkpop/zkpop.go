@@ -3,7 +3,7 @@ package zkpop
 
 /*
 #cgo CFLAGS: -I../external/KEM-NIZKPoP/frodo-zkpop/src
-#cgo LDFLAGS: -L../external/KEM-NIZKPoP/frodo-zkpop/frodo1344 -lfrodo
+#cgo LDFLAGS: -L../external/KEM-NIZKPoP/frodo-zkpop/frodo1344 -lfrodo -lcrypto
 
 #include "api_frodo1344.h"
 #include <stdint.h>
