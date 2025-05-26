@@ -1,0 +1,155 @@
+package main
+
+/*
+#cgo CFLAGS: -I../external/KEM-NIZKPoP/frodo-zkpop/src
+#cgo LDFLAGS: -L../external/KEM-NIZKPoP/frodo-zkpop/frodo976 -lfrodo
+*/
+import "C"
+
+import (
+	"bytes"
+	"fmt"
+	"log"
+	"time"
+	"math"
+
+	"zkpop-go/zkpop"
+)
+
+func stddev(times []float64, mean float64) float64 {
+	var sum float64
+	for _, t := range times {
+		diff := t - mean
+		sum += diff * diff
+	}
+	return math.Sqrt(sum / float64(len(times)))
+}
+
+func avg(times []float64) float64 {
+	var sum float64
+	for _, t := range times {
+		sum += t
+	}
+	return sum / float64(len(times))
+}
+
+func sum(values []float64) float64 {
+	var total float64
+	for _, v := range values {
+		total += v
+	}
+	return total
+}
+
+func testFrodoKEM(N int) {
+	fmt.Println("Testing Frodo976KEM...")
+
+	var kpTimes, encTimes, decTimes []float64
+
+	pk, sk, err := zkpop.KeyPairFrodo976()
+	if err != nil {
+		log.Fatalf("Error generating keypair: %v", err)
+	}
+
+	startKeypair := time.Now()
+	for i := 0; i < N; i++ {
+		start := time.Now()
+		pk, sk, err = zkpop.KeyPairFrodo976()
+		if err != nil {
+			log.Fatalf("Keypair generation failed on iteration %d: %v", i, err)
+		}
+		kpTimes = append(kpTimes, time.Since(start).Seconds())
+	}
+	totalKeypair := time.Since(startKeypair).Seconds()
+
+	ct, ss, err := zkpop.EncapsFrodo976(pk)
+	if err != nil {
+		log.Fatalf("Failed FrodoKEM encapsulation: %v", err)
+	}
+
+	startEncaps := time.Now()
+	for i := 0; i < N; i++ {
+		start := time.Now()
+		ct, ss, err = zkpop.EncapsFrodo976(pk)
+		if err != nil {
+			log.Fatalf("Encapsulation failed on iteration %d: %v", i, err)
+		}
+		encTimes = append(encTimes, time.Since(start).Seconds())
+	}
+	totalEncaps := time.Since(startEncaps).Seconds()
+
+	css, err := zkpop.DecapsFrodo976(ct, sk)
+	if err != nil || !bytes.Equal(ss, css) {
+		log.Fatalf("Failed FrodoKEM decapsulation.")
+	}
+
+	startDecaps := time.Now()
+	for i := 0; i < N; i++ {
+		start := time.Now()
+		css, err = zkpop.DecapsFrodo976(ct, sk)
+		if err != nil || !bytes.Equal(ss, css) {
+			log.Fatalf("Decapsulation failed on iteration %d", i)
+		}
+		decTimes = append(decTimes, time.Since(start).Seconds())
+	}
+	totalDecaps := time.Since(startDecaps).Seconds()
+
+	kpAvg := avg(kpTimes)
+	encAvg := avg(encTimes)
+	decAvg := avg(decTimes)
+
+	fmt.Printf("KeyPair976:  Total = %.4f s, Avg = %.6f s/op, StdDev = %.6f\n", totalKeypair, kpAvg, stddev(kpTimes, kpAvg))
+	fmt.Printf("Encaps976:   Total = %.4f s, Avg = %.6f s/op, StdDev = %.6f\n", totalEncaps, encAvg, stddev(encTimes, encAvg))
+	fmt.Printf("Decaps976:   Total = %.4f s, Avg = %.6f s/op, StdDev = %.6f\n", totalDecaps, decAvg, stddev(decTimes, decAvg))
+}
+
+func testFrodoKEMNIZKPoP(N int) {
+	fmt.Println("Testing Frodo976KEM-NIZKPoP...")
+
+	var keygenTimes, verifyTimes []float64
+
+	for i := 0; i < N; i++ {
+		start := time.Now()
+		pk, _, zkpopProof, err := zkpop.KeyPairFrodo976NIZKPoP()
+		if err != nil {
+			log.Fatalf("Frodo976 Keypair NIZKPoP failed on iteration %d: %v", i, err)
+		}
+		keygenTimes = append(keygenTimes, time.Since(start).Seconds())
+
+		fmt.Printf("[Iter %d] zkpop length: %d bytes\n", i, len(zkpopProof))
+		fmt.Printf("[Iter %d] pk length: %d bytes\n", i, len(pk))
+
+		if pk == nil || len(pk) == 0 || zkpopProof == nil || len(zkpopProof) == 0 {
+			log.Fatalf("Frodo976 Invalid input to verification on iteration %d", i)
+		}
+
+		start = time.Now()
+		valid := zkpop.VerifyFrodo976ZKPop(pk, zkpopProof)
+		if !valid {
+			log.Fatalf("Frodo976 Verification failed on iteration %d", i)
+		}
+		verifyTimes = append(verifyTimes, time.Since(start).Seconds())
+	}
+
+	totalKeygen := sum(keygenTimes)
+	totalVerify := sum(verifyTimes)
+	total := totalKeygen + totalVerify
+
+	keygenAvg := avg(keygenTimes)
+	verifyAvg := avg(verifyTimes)
+
+	fmt.Printf("KeyGen976:   Total = %.4f s, Avg = %.6f s/op, StdDev = %.6f\n", totalKeygen, keygenAvg, stddev(keygenTimes, keygenAvg))
+	fmt.Printf("Verify976:   Total = %.4f s, Avg = %.6f s/op, StdDev = %.6f\n", totalVerify, verifyAvg, stddev(verifyTimes, verifyAvg))
+	fmt.Printf("Combined976: Total = %.4f s, Avg = %.6f s/step (KeyGen+Verify)\n", total, (total)/float64(N*2))
+}
+
+func main() {
+	N := 1000
+	fmt.Printf("Testing %d iterations for Frodo976...\n\n", N)
+
+	testFrodoKEM(N)
+	fmt.Println()
+	testFrodoKEMNIZKPoP(N)
+
+	fmt.Println("\nEnd of Frodo976 testing.")
+}
