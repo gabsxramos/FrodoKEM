@@ -1,8 +1,8 @@
-// FrodoKEM-1344 bindings
+// FrodoKEM-976 bindings
 package zkpop
 
 /*
-#include "api_frodo1344.h"
+#include "api_frodo976.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <openssl/evp.h>
@@ -15,11 +15,11 @@ import (
 	"unsafe"
 )
 
-func KeyPairFrodo1344() ([]byte, []byte, error) {
+func KeyPairFrodo976() ([]byte, []byte, error) {
 	pk := make([]byte, C.CRYPTO_PUBLICKEYBYTES)
 	sk := make([]byte, C.CRYPTO_SECRETKEYBYTES)
 
-	ret := C.crypto_kem_keypair_Frodo1344((*C.uint8_t)(unsafe.Pointer(&pk[0])),
+	ret := C.crypto_kem_keypair_Frodo976((*C.uint8_t)(unsafe.Pointer(&pk[0])),
 		(*C.uint8_t)(unsafe.Pointer(&sk[0])))
 
 	if ret != 0 {
@@ -28,11 +28,11 @@ func KeyPairFrodo1344() ([]byte, []byte, error) {
 	return pk, sk, nil
 }
 
-func EncapsFrodo1344(pk []byte) ([]byte, []byte, error) {
+func EncapsFrodo976(pk []byte) ([]byte, []byte, error) {
 	ss := make([]byte, C.CRYPTO_BYTES)
 	ct := make([]byte, C.CRYPTO_CIPHERTEXTBYTES)
 
-	ret := C.crypto_kem_enc_Frodo1344((*C.uint8_t)(unsafe.Pointer(&ct[0])),
+	ret := C.crypto_kem_enc_Frodo976((*C.uint8_t)(unsafe.Pointer(&ct[0])),
 		(*C.uint8_t)(unsafe.Pointer(&ss[0])),
 		(*C.uint8_t)(unsafe.Pointer(&pk[0])))
 	if ret != 0 {
@@ -41,10 +41,10 @@ func EncapsFrodo1344(pk []byte) ([]byte, []byte, error) {
 	return ct, ss, nil
 }
 
-func DecapsFrodo1344(ct []byte, sk []byte) ([]byte, error) {
+func DecapsFrodo976(ct []byte, sk []byte) ([]byte, error) {
 	css := make([]byte, C.CRYPTO_BYTES)
 
-	ret := C.crypto_kem_dec_Frodo1344((*C.uint8_t)(unsafe.Pointer(&css[0])),
+	ret := C.crypto_kem_dec_Frodo976((*C.uint8_t)(unsafe.Pointer(&css[0])),
 		(*C.uint8_t)(unsafe.Pointer(&ct[0])),
 		(*C.uint8_t)(unsafe.Pointer(&sk[0])))
 	if ret != 0 {
